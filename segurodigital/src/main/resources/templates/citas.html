@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Digital — Mis citas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="app">
+    <div th:replace="~{fragments/sidebar :: sidebar(activo='citas', afiliado=${afiliado})}"></div>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Mis citas</h1>
+                <div class="date">Agenda, reprograma o cancela tus citas médicas.</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="form-error" th:if="${error}" th:text="${error}">Error</div>
+
+            <div class="form-card">
+                <div class="card-head">
+                    <h2>Agendar nueva cita</h2>
+                </div>
+                <form th:action="@{/citas}" method="post" class="form-grid">
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="centroMedicoId">Centro médico</label>
+                        <div class="input-wrap">
+                            <select id="centroMedicoId" name="centroMedicoId" required>
+                                <option value="" disabled selected>Selecciona un centro</option>
+                                <option th:each="centro : ${centros}" th:value="${centro.id}" th:text="${centro.nombre}">Clínica San Rafael</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="especialidad">Especialidad</label>
+                        <div class="input-wrap">
+                            <input type="text" id="especialidad" name="especialidad" placeholder="Ej. Medicina general" required>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="fechaHora">Fecha y hora</label>
+                        <div class="input-wrap">
+                            <input type="datetime-local" id="fechaHora" name="fechaHora" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Agendar cita</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>Historial de citas</h2>
+                </div>
+                <p class="empty-note" th:if="${#lists.isEmpty(citas)}">Todavía no tienes citas agendadas.</p>
+                <table class="table-list" th:if="${not #lists.isEmpty(citas)}">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Especialidad</th>
+                            <th>Centro médico</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cita : ${citas}">
+                            <td th:text="${#temporals.format(cita.fechaHora, 'dd/MM/yyyy hh:mm a')}">09/03/2026 09:00 AM</td>
+                            <td th:text="${cita.especialidad}">Chequeo general</td>
+                            <td th:text="${cita.centroMedico.nombre}">Clínica San Rafael</td>
+                            <td>
+                                <span class="pill green" th:if="${cita.estado == 'CONFIRMADA'}">Confirmada</span>
+                                <span class="pill amber" th:if="${cita.estado == 'PENDIENTE'}">Pendiente</span>
+                                <span class="pill gray" th:if="${cita.estado == 'CANCELADA'}">Cancelada</span>
+                                <span class="pill gray" th:if="${cita.estado == 'ATENDIDA'}">Atendida</span>
+                            </td>
+                            <td>
+                                <form th:if="${cita.esModificable()}" th:action="@{/citas/{id}/cancelar(id=${cita.id})}" method="post">
+                                    <button type="submit" class="btn-ghost-sm">Cancelar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

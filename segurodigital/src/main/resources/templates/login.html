@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Digital — Iniciar sesión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="login-screen">
+    <div class="login-aside">
+        <div class="aside-mark">
+            <svg class="shield-icon" viewBox="0 0 40 40" fill="none">
+                <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" fill="#1B6FD1" opacity="0.25"/>
+                <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" stroke="#7FB4F2" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M20 13.5V26.5M13.5 20H26.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            <span class="brand">Seguro Digital</span>
+        </div>
+        <h1 class="aside-headline">Tu carnet, tus citas y tu cobertura,<br><em>siempre en tu bolsillo.</em></h1>
+        <p class="aside-sub">Deja el carnet físico en casa. Consulta tu cobertura, agenda en la red de centros médicos y da seguimiento a tus reembolsos desde un solo lugar.</p>
+        <div class="aside-points">
+            <div class="aside-point">
+                <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#7FB4F2" stroke-width="2" stroke-linecap="round"><path d="M4 12l6 6L20 6"/></svg></div>
+                <p><strong>Carnet siempre vigente.</strong> Con código QR y validación al instante en cualquier centro médico.</p>
+            </div>
+            <div class="aside-point">
+                <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#7FB4F2" stroke-width="2" stroke-linecap="round"><path d="M4 12l6 6L20 6"/></svg></div>
+                <p><strong>Recordatorios automáticos.</strong> Un aviso 24 horas y 1 hora antes de cada cita.</p>
+            </div>
+            <div class="aside-point">
+                <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#7FB4F2" stroke-width="2" stroke-linecap="round"><path d="M4 12l6 6L20 6"/></svg></div>
+                <p><strong>Centros cercanos al instante.</strong> Encuentra la red médica más próxima a donde estás.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-panel">
+        <div class="login-box">
+            <h1>Inicia sesión</h1>
+            <p class="sub">Accede con tu número de póliza para ver tu carnet y tus citas.</p>
+
+            <div class="form-error" th:if="${error}" th:text="${error}">Error</div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="numeroPoliza">N.º de póliza</label>
+                    <div class="input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M7 14h4"/></svg>
+                        <input type="text" id="numeroPoliza" name="numeroPoliza" placeholder="Ej. 04812-2024-A" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-row">
+                        <label for="password" style="margin-bottom:0;">Contraseña</label>
+                        <a class="link-sm" href="#">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <div class="input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Iniciar sesión</button>
+            </form>
+
+            <p class="login-foot">¿Aún no tienes cuenta? <a href="#">Activa tu afiliación</a></p>
+            <div class="role-note">¿Eres administrador o ejecutivo de servicio? Usa el mismo formulario — el sistema te llevará a tu panel según tu rol.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

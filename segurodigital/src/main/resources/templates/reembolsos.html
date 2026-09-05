@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Digital — Reembolsos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="app">
+    <div th:replace="~{fragments/sidebar :: sidebar(activo='reembolsos', afiliado=${afiliado})}"></div>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Reembolsos</h1>
+                <div class="date">Solicita y da seguimiento a tus reembolsos.</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="form-card">
+                <div class="card-head">
+                    <h2>Solicitar reembolso</h2>
+                </div>
+                <form th:action="@{/reembolsos}" method="post" class="form-grid">
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="monto">Monto</label>
+                        <div class="input-wrap">
+                            <input type="number" step="0.01" min="0" id="monto" name="monto" placeholder="Ej. 25.00" required>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:0; grid-column: span 2;">
+                        <label for="descripcion">Descripción</label>
+                        <div class="input-wrap">
+                            <input type="text" id="descripcion" name="descripcion" placeholder="Ej. Consulta general - Clínica San Rafael" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Enviar solicitud</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>Historial de solicitudes</h2>
+                </div>
+                <p class="empty-note" th:if="${#lists.isEmpty(solicitudes)}">Todavía no has solicitado ningún reembolso.</p>
+                <table class="table-list" th:if="${not #lists.isEmpty(solicitudes)}">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="solicitud : ${solicitudes}">
+                            <td th:text="${#temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy')}">03/09/2026</td>
+                            <td th:text="${solicitud.descripcion}">Consulta general</td>
+                            <td th:text="'$' + ${#numbers.formatDecimal(solicitud.monto, 1, 2)}">$25.00</td>
+                            <td>
+                                <span class="pill amber" th:if="${solicitud.estado == 'EN_REVISION'}">En revisión</span>
+                                <span class="pill green" th:if="${solicitud.estado == 'APROBADO'}">Aprobado</span>
+                                <span class="pill red" th:if="${solicitud.estado == 'RECHAZADO'}">Rechazado</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

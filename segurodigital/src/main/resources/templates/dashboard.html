@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Digital — Inicio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="app">
+    <div th:replace="~{fragments/sidebar :: sidebar(activo='inicio', afiliado=${afiliado})}"></div>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 th:text="'Hola, ' + ${afiliado.nombre}">Hola, María</h1>
+                <div class="date" th:text="${#temporals.format(#temporals.createNow(), 'EEEE, d \'de\' MMMM')}">Jueves, 3 de septiembre</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+                    <span class="badge" th:if="${carnetPorVencer}"></span>
+                </button>
+                <div class="sb-avatar" style="width:38px;height:38px;" th:text="${#strings.substring(afiliado.nombre,0,1)}">M</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="alert-banner" th:if="${carnetPorVencer}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 17a2 2 0 001.7 3h15.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                Tu carnet vence pronto — renuévalo para no perder cobertura.
+                <a href="#">Renovar ahora</a>
+            </div>
+
+            <div class="grid-top">
+                <!-- Carnet digital -->
+                <div class="carnet-card" th:if="${carnet != null}">
+                    <div class="carnet-top">
+                        <svg class="shield-icon" viewBox="0 0 40 40" fill="none">
+                            <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" fill="#fff" opacity="0.12"/>
+                            <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" stroke="#7FB4F2" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M20 13.5V26.5M13.5 20H26.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                        <span class="carnet-status" th:classappend="${carnet.esVigente()} ? '' : 'vencido'"
+                              th:text="${carnet.esVigente()} ? '● Vigente' : '● Vencido'">● Vigente</span>
+                    </div>
+                    <p class="carnet-name" th:text="${afiliado.nombre}">María Ramírez</p>
+                    <p class="carnet-plan" th:text="${afiliado.plan != null ? afiliado.plan.nombre : 'Sin plan asignado'}">Plan Familiar Plus</p>
+                    <div class="carnet-bottom">
+                        <div>
+                            <div class="carnet-field-label">N.º de afiliación</div>
+                            <div class="carnet-field-value" th:text="${carnet.numeroAfiliacion}">04812 2024 A</div>
+                        </div>
+                        <div class="carnet-qr">
+                            <svg viewBox="0 0 24 24" fill="#0B2540"><rect x="2" y="2" width="7" height="7"/><rect x="15" y="2" width="7" height="7"/><rect x="2" y="15" width="7" height="7"/><rect x="12" y="2" width="2" height="2"/><rect x="12" y="12" width="4" height="4"/><rect x="18" y="12" width="2" height="2"/><rect x="12" y="18" width="2" height="4"/><rect x="18" y="18" width="4" height="2"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="carnet-card" th:if="${carnet == null}">
+                    <div class="carnet-top">
+                        <svg class="shield-icon" viewBox="0 0 40 40" fill="none">
+                            <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" fill="#fff" opacity="0.12"/>
+                            <path d="M20 3L34 8V19C34 27.5 28 33.8 20 37C12 33.8 6 27.5 6 19V8L20 3Z" stroke="#7FB4F2" stroke-width="1.6" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <p class="carnet-empty">Todavía no tienes un carnet digital asignado. Contacta a tu administrador.</p>
+                </div>
+
+                <div class="col-right">
+                    <div class="card">
+                        <div class="card-head">
+                            <h2>Próximas citas</h2>
+                            <a class="link-sm" th:href="@{/citas}">Ver historial completo</a>
+                        </div>
+                        <p class="empty-note" th:if="${#lists.isEmpty(citas)}">Todavía no tienes citas agendadas.</p>
+                        <div class="appt-row" th:each="cita, iter : ${citas}" th:if="${iter.index lt 3}">
+                            <div class="appt-time">
+                                <div class="t" th:text="${#temporals.format(cita.fechaHora, 'hh:mm a')}">09:00</div>
+                                <div class="d" th:text="${#temporals.format(cita.fechaHora, 'MMM d')}">Mar 9</div>
+                            </div>
+                            <div class="appt-bar"
+                                 th:classappend="${cita.estado == 'PENDIENTE' ? 'warn' : (cita.estado == 'CANCELADA' ? 'off' : '')}"></div>
+                            <div class="appt-body">
+                                <p class="who" th:text="${cita.especialidad}">Chequeo general</p>
+                                <p class="what" th:text="${cita.centroMedico.nombre}">Clínica San Rafael</p>
+                            </div>
+                            <span class="pill green" th:if="${cita.estado == 'CONFIRMADA'}">Confirmada</span>
+                            <span class="pill amber" th:if="${cita.estado == 'PENDIENTE'}">Pendiente</span>
+                            <span class="pill gray" th:if="${cita.estado == 'CANCELADA'}">Cancelada</span>
+                            <span class="pill gray" th:if="${cita.estado == 'ATENDIDA'}">Atendida</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-grid">
+                        <a class="quick-card b1" th:href="@{/citas}">
+                            <div class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></div>
+                            <h3>Agendar cita</h3>
+                            <p>Elige especialidad, centro y horario disponible.</p>
+                        </a>
+                        <a class="quick-card b2" th:href="@{/centros}">
+                            <div class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+                            <h3>Centros cercanos</h3>
+                            <p>Encuentra la red médica más próxima a ti.</p>
+                        </a>
+                        <a class="quick-card b3" th:href="@{/reembolsos}">
+                            <div class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 6.5c0-1.9-2.2-3.5-5-3.5S7 4.6 7 6.5 9.2 9 12 9s5 1.5 5 3.5-2.2 3.5-5 3.5-5-1.5-5-3.5"/></svg></div>
+                            <h3>Solicitar reembolso</h3>
+                            <p>Sube tu comprobante y da seguimiento al pago.</p>
+                        </a>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <h2>Centros médicos cercanos</h2>
+                            <a class="link-sm" th:href="@{/centros}">Ver todos</a>
+                        </div>
+                        <p class="empty-note" th:if="${#lists.isEmpty(centros)}">No hay centros médicos registrados todavía.</p>
+                        <div class="centros-list">
+                            <div class="centro-row" th:each="centro, iter : ${centros}" th:if="${iter.index lt 2}">
+                                <div class="centro-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+                                <div class="centro-body">
+                                    <p class="n" th:text="${centro.nombre}">Clínica San Rafael</p>
+                                    <p class="a" th:text="${centro.direccion}">3.ª Calle Poniente, Santa Ana</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

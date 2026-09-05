@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Digital — Centros médicos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="app">
+    <div th:replace="~{fragments/sidebar :: sidebar(activo='centros', afiliado=${afiliado})}"></div>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Centros médicos</h1>
+                <div class="date">Encuentra la red médica más cercana a ti.</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="form-card">
+                <div class="card-head">
+                    <h2>Buscar centros cercanos</h2>
+                </div>
+                <form th:action="@{/centros}" method="get" class="form-grid">
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="lat">Latitud</label>
+                        <div class="input-wrap">
+                            <input type="number" step="any" id="lat" name="lat" th:value="${lat}" placeholder="Ej. 13.9942">
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="lng">Longitud</label>
+                        <div class="input-wrap">
+                            <input type="number" step="any" id="lng" name="lng" th:value="${lng}" placeholder="Ej. -89.5597">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Buscar cercanos</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>Red de centros médicos</h2>
+                </div>
+                <p class="empty-note" th:if="${#lists.isEmpty(centros)}">No hay centros médicos registrados todavía.</p>
+                <div class="centros-list">
+                    <div class="centro-row" th:each="centro : ${centros}">
+                        <div class="centro-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                        </div>
+                        <div class="centro-body">
+                            <p class="n" th:text="${centro.nombre}">Clínica San Rafael</p>
+                            <p class="a" th:text="${centro.direccion + (centro.telefono != null ? ' · ' + centro.telefono : '')}">3.ª Calle Poniente, Santa Ana</p>
+                        </div>
+                        <div class="centro-dist" th:if="${lat != null and lng != null}"
+                             th:text="${#numbers.formatDecimal(centro.distanciaKm(lat, lng), 1, 1)} + ' km'">1.2 km</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
