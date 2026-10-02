@@ -1,72 +1,112 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, MapPin, Clock } from 'lucide-react-native';
+import { Calendar, MapPin, Clock, Stethoscope, PlusCircle } from 'lucide-react-native';
 import { COLORS, SPACING } from '../../theme/theme';
 import { useAppContext } from '../../context/AppContext';
 
-export const PatientHomeScreen = () => {
-  const { seniorMode } = useAppContext();
+export const PatientHomeScreen = ({ navigation }: any) => {
+  const { seniorMode, user, appointments, doctors } = useAppContext();
+  const displayName = user?.firstName || user?.name || 'Paciente';
+
+  // Buscar la próxima cita confirmada del usuario
+  const myAppointments = appointments.filter((a) => a.patientId === user?.id);
+  const nextConfirmed = myAppointments.find((a) => a.status === 'confirmed');
+  const nextDoc = doctors.find((d) => d.id === nextConfirmed?.doctorId);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        
+        {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, seniorMode && styles.seniorGreeting]}>¡Hola, Juan!</Text>
-            <Text style={[styles.subtitle, seniorMode && styles.seniorSubtitle]}>Tu salud es nuestra prioridad hoy.</Text>
+            <Text style={[styles.greeting, seniorMode && styles.seniorGreeting]}>
+              ¡Hola, {displayName}!
+            </Text>
+            <Text style={[styles.subtitle, seniorMode && styles.seniorSubtitle]}>
+              Tu salud es nuestra prioridad hoy.
+            </Text>
           </View>
           <View style={styles.avatarContainer}>
-            <Image source={{ uri: 'https://ui-avatars.com/api/?name=Juan+Perez&background=0D6EFD&color=fff' }} style={styles.avatar} />
+            <Image
+              source={{ uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || displayName)}&background=0D6EFD&color=fff` }}
+              style={styles.avatar}
+            />
           </View>
         </View>
 
-        <View style={styles.heroCard}>
-          <View style={styles.heroHeader}>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>PRÓXIMA CITA</Text>
+        {/* Tarjeta Hero: Próxima Cita Real */}
+        {nextConfirmed ? (
+          <View style={styles.heroCard}>
+            <View style={styles.heroHeader}>
+              <View style={styles.heroBadge}>
+                <Text style={styles.heroBadgeText}>PRÓXIMA CITA</Text>
+              </View>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeText}>CONFIRMADA</Text>
+              </View>
             </View>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>CONFIRMADA</Text>
-            </View>
-          </View>
-          
-          <Text style={[styles.specialty, seniorMode && styles.seniorSpecialty]}>Cardiología</Text>
-          
-          <View style={styles.appointmentDetails}>
-            <View style={styles.detailRow}>
-              <Clock size={seniorMode ? 24 : 18} color={COLORS.textSecondary} />
-              <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>Mañana, 10:00 AM</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailIcon, seniorMode && { fontSize: 20 }]}>👨‍⚕️</Text>
-              <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>Dr. Roberto Salas</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <MapPin size={seniorMode ? 24 : 18} color={COLORS.textSecondary} />
-              <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>Consultorio 304, Ala Sur</Text>
-            </View>
-          </View>
 
-          <View style={styles.actionButtonsRow}>
-            <TouchableOpacity style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Reagendar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>Ver Detalles</Text>
+            <Text style={[styles.specialty, seniorMode && styles.seniorSpecialty]}>
+              {nextConfirmed.professionName}
+            </Text>
+
+            <View style={styles.appointmentDetails}>
+              <View style={styles.detailRow}>
+                <Clock size={seniorMode ? 24 : 18} color={COLORS.textSecondary} />
+                <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>
+                  {nextConfirmed.date} - {nextConfirmed.time}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Stethoscope size={seniorMode ? 24 : 18} color={COLORS.primary} />
+                <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>
+                  {nextConfirmed.doctorName}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <MapPin size={seniorMode ? 24 : 18} color={COLORS.textSecondary} />
+                <Text style={[styles.detailText, seniorMode && styles.seniorDetailText]}>
+                  {nextDoc?.room || 'Consultorio Principal'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.heroCard, { backgroundColor: '#F8FAFC' }]}>
+            <View style={styles.heroHeader}>
+              <View style={styles.heroBadge}>
+                <Text style={styles.heroBadgeText}>AGENDA MÉDICA</Text>
+              </View>
+            </View>
+            <Text style={[styles.specialty, { fontSize: 20 }, seniorMode && styles.seniorSpecialty]}>
+              Sin citas confirmadas
+            </Text>
+            <Text style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 16 }}>
+              Puedes programar una consulta con nuestros especialistas desde la sección de citas.
+            </Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => navigation?.navigate('Mis Citas')}
+            >
+              <Text style={styles.primaryButtonText}>AGENDAR AHORA</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        )}
 
+        {/* CTA Banner */}
         <View style={styles.ctaBanner}>
           <Text style={[styles.ctaTitle, seniorMode && styles.seniorCtaTitle]}>¿Necesitas otra consulta?</Text>
-          <Text style={[styles.ctaSubtitle, seniorMode && styles.seniorCtaSubtitle]}>Encuentra disponibilidad rápida.</Text>
-          <TouchableOpacity style={[styles.ctaButton, seniorMode && { minHeight: 56 }]}>
-            <Text style={styles.ctaButtonText}>AGENDAR NUEVA CITA</Text>
+          <Text style={[styles.ctaSubtitle, seniorMode && styles.seniorCtaSubtitle]}>
+            Contamos con {doctors.length} médicos y diversas especialidades disponibles.
+          </Text>
+          <TouchableOpacity
+            style={[styles.ctaButton, seniorMode && { minHeight: 56 }]}
+            onPress={() => navigation?.navigate('Mis Citas')}
+          >
+            <Text style={styles.ctaButtonText}>EXPLORAR ESPECIALISTAS</Text>
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -88,23 +128,19 @@ const styles = StyleSheet.create({
   heroBadgeText: { fontSize: 12, fontWeight: 'bold', color: COLORS.textSecondary },
   statusBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusBadgeText: { fontSize: 12, fontWeight: 'bold', color: COLORS.success },
-  specialty: { fontSize: 28, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.lg },
-  seniorSpecialty: { fontSize: 36 },
-  appointmentDetails: { gap: 12, marginBottom: SPACING.xl },
+  specialty: { fontSize: 26, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.lg },
+  seniorSpecialty: { fontSize: 32 },
+  appointmentDetails: { gap: 12, marginBottom: SPACING.md },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  detailIcon: { fontSize: 16 },
   detailText: { fontSize: 15, color: COLORS.text, fontWeight: '500' },
   seniorDetailText: { fontSize: 20 },
-  actionButtonsRow: { flexDirection: 'row', gap: 12 },
-  secondaryButton: { flex: 1, borderWidth: 1, borderColor: COLORS.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  secondaryButtonText: { color: COLORS.primary, fontWeight: 'bold' },
-  primaryButton: { flex: 1, backgroundColor: COLORS.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  primaryButtonText: { color: '#FFF', fontWeight: 'bold' },
+  primaryButton: { backgroundColor: COLORS.primary, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
   ctaBanner: { backgroundColor: COLORS.primary, borderRadius: 16, padding: SPACING.lg, alignItems: 'center' },
   ctaTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   seniorCtaTitle: { fontSize: 26 },
-  ctaSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14, marginBottom: SPACING.lg },
-  seniorCtaSubtitle: { fontSize: 18 },
+  ctaSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: SPACING.lg, textAlign: 'center' },
+  seniorCtaSubtitle: { fontSize: 17 },
   ctaButton: { backgroundColor: '#FFF', width: '100%', paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
   ctaButtonText: { color: COLORS.primary, fontWeight: 'bold', fontSize: 14 },
 });

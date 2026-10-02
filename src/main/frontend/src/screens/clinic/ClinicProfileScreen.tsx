@@ -6,7 +6,7 @@ import { COLORS, SPACING } from '../../theme/theme';
 import { useAppContext } from '../../context/AppContext';
 
 export const ClinicProfileScreen = () => {
-  const { setMode } = useAppContext();
+  const { logout } = useAppContext();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -32,10 +32,10 @@ export const ClinicProfileScreen = () => {
 
         <TouchableOpacity 
           style={styles.switchButton}
-          onPress={() => setMode('patient')}
+          onPress={logout}
         >
           <Settings size={20} color={COLORS.textSecondary} />
-          <Text style={styles.switchButtonText}>Cambiar a Vista de Paciente (Demo)</Text>
+          <Text style={styles.switchButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
