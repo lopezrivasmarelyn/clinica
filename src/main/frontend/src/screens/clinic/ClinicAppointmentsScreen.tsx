@@ -1,86 +1,128 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Clock, Search } from 'lucide-react-native';
-import { COLORS, SPACING } from '../../theme/theme';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  Button,
+  Alert,
+  RefreshControl
+} from 'react-native';
+import { ApiService, Cita } from '../../services/api';
 
-export const ClinicAppointmentsScreen = () => {
-  const appointments = [
-    { id: '1', time: '10:00', patient: 'Maria Garcia Vargas', doc: 'Dr. Roberto Salas', spec: 'Cardiología', status: 'En Espera' },
-    { id: '2', time: '10:15', patient: 'Juan López Pérez', doc: 'Dra. Ana Medina', spec: 'Medicina General', status: 'En Consulta' },
-    { id: '3', time: '09:30', patient: 'Carlos Ruiz S.', doc: 'Dr. Roberto Salas', spec: 'Cardiología', status: 'Por Cobrar' },
-  ];
+export default function ClinicAppointmentsScreen() {
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // Por ahora consultamos las citas del centro médico con ID 1
+  const CENTRO_ID = 1;
+
+  const cargarCitasCentro = async () => {
+    try {
+      // Usamos el endpoint para traer citas por afiliado/centro
+      const data = await ApiService.getCitasPorAfiliado(CENTRO_ID);
+      setCitas(data);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudieron cargar las citas de la clínica.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarCitasCentro();
+  }, []);
+
+  const handleCancelar = (citaId?: number) => {
+    if (!citaId) return;
+
+    Alert.alert('Cancelar Cita', '¿Deseas cancelar esta cita médica?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Sí, Cancelar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await ApiService.cancelarCita(citaId);
+            Alert.alert('Éxito', 'Cita cancelada.');
+            cargarCitasCentro();
+          } catch (error) {
+            Alert.alert('Error', 'No se pudo cancelar la cita.');
+          }
+        }
+      }
+    ]);
+  };
+
+  if (loading) {
+    return (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0056b3" />
+        </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Gestión de Citas</Text>
-        <Text style={styles.subtitle}>Hoy, 24 de Octubre</Text>
-      </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>Panel de Citas de la Clínica</Text>
 
-      <ScrollView contentContainerStyle={styles.listContainer}>
-        {appointments.map((appt) => (
-          <View key={appt.id} style={styles.card}>
-            <View style={styles.timeColumn}>
-              <Text style={styles.timeText}>{appt.time}</Text>
+        {citas.length === 0 ? (
+            <View style={styles.center}>
+              <Text style={styles.emptyText}>No hay citas programadas para esta clínica.</Text>
             </View>
-            <View style={styles.contentColumn}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.patientName}>{appt.patient}</Text>
-                <View style={[
-                  styles.statusBadge, 
-                  appt.status === 'En Consulta' ? styles.statusActive : 
-                  appt.status === 'Por Cobrar' ? styles.statusWarning : styles.statusWaiting
-                ]}>
-                  <Text style={[
-                    styles.statusText,
-                    appt.status === 'En Consulta' ? styles.statusTextActive : 
-                    appt.status === 'Por Cobrar' ? styles.statusTextWarning : styles.statusTextWaiting
-                  ]}>{appt.status}</Text>
-                </View>
-              </View>
-              <Text style={styles.doctorInfo}>{appt.doc} • {appt.spec}</Text>
-              
-              {appt.status === 'En Consulta' && (
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionButtonText}>Finalizar Consulta</Text>
-                </TouchableOpacity>
-              )}
-              {appt.status === 'Por Cobrar' && (
-                <TouchableOpacity style={[styles.actionButton, styles.actionButtonWarning]}>
-                  <Text style={[styles.actionButtonText, { color: '#FFF' }]}>Realizar Cobro</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+        ) : (
+            <FlatList
+                data={citas}
+                keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+                refreshControl={
+                  <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={() => { setRefreshing(true); cargarCitasCentro(); }}
+                  />
+                }
+                renderItem={({ item }) => (
+                    <View style={styles.card}>
+                      <Text style={styles.especialidad}>{item.especialidad}</Text>
+                      <Text style={styles.info}>Afiliado ID: {item.afiliado?.id}</Text>
+                      <Text style={styles.fecha}>
+                        Fecha: {new Date(item.fechaHora).toLocaleString()}
+                      </Text>
+                      <Text style={[
+                        styles.estado,
+                        { color: item.estado === 'CANCELADA' ? '#d9534f' : '#28a745' }
+                      ]}>
+                        Estado: {item.estado || 'PENDIENTE'}
+                      </Text>
+
+                      {item.estado !== 'CANCELADA' && (
+                          <View style={styles.buttonContainer}>
+                            <Button
+                                title="Cancelar Cita"
+                                color="#d9534f"
+                                onPress={() => handleCancelar(item.id)}
+                            />
+                          </View>
+                      )}
+                    </View>
+                )}
+            />
+        )}
+      </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.background },
-  header: { padding: SPACING.lg },
-  title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary },
-  listContainer: { padding: SPACING.lg },
-  card: { flexDirection: 'row', backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.lg, marginBottom: SPACING.md, borderWidth: 1, borderColor: COLORS.border, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  timeColumn: { width: 50, borderRightWidth: 1, borderRightColor: COLORS.background, marginRight: SPACING.md, paddingTop: 4 },
-  timeText: { fontSize: 14, fontWeight: 'bold', color: COLORS.textSecondary },
-  contentColumn: { flex: 1 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
-  patientName: { fontSize: 16, fontWeight: 'bold', color: COLORS.text, flex: 1, paddingRight: 8 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  statusWaiting: { backgroundColor: '#F3F4F6' },
-  statusActive: { backgroundColor: '#E0F2FE' },
-  statusWarning: { backgroundColor: '#FEF3C7' },
-  statusText: { fontSize: 10, fontWeight: 'bold' },
-  statusTextWaiting: { color: COLORS.textSecondary },
-  statusTextActive: { color: COLORS.primary },
-  statusTextWarning: { color: '#D97706' },
-  doctorInfo: { fontSize: 13, color: COLORS.textSecondary, marginBottom: SPACING.md },
-  actionButton: { backgroundColor: 'rgba(13,110,253,0.1)', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  actionButtonWarning: { backgroundColor: COLORS.warning },
-  actionButtonText: { color: COLORS.primary, fontWeight: 'bold', fontSize: 14 },
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, color: '#333' },
+  emptyText: { fontSize: 16, color: '#888' },
+  card: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 15, elevation: 2 },
+  especialidad: { fontSize: 18, fontWeight: 'bold', color: '#0056b3' },
+  info: { fontSize: 14, color: '#444', marginTop: 4 },
+  fecha: { fontSize: 14, color: '#555', marginTop: 4 },
+  estado: { fontSize: 14, fontWeight: '600', marginTop: 4 },
+  buttonContainer: { marginTop: 10 },
 });
