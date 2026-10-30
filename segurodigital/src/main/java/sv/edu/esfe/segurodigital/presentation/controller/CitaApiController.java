@@ -6,6 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sv.edu.esfe.segurodigital.aplication.service.CitaService;
 import sv.edu.esfe.segurodigital.domain.entity.Cita;
+import sv.edu.esfe.segurodigital.aplication.service.AfiliadoService;
+import sv.edu.esfe.segurodigital.aplication.service.CentroMedicoService;
+import sv.edu.esfe.segurodigital.infrastructure.config.SesionAfiliado;
 
 import java.util.List;
 
@@ -15,10 +18,21 @@ import java.util.List;
 public class CitaApiController {
 
     private final CitaService citaService;
+private final AfiliadoService afiliadoService;
+private final CentroMedicoService centroMedicoService;
+private final SesionAfiliado sesionAfiliado;
 
-    public CitaApiController(CitaService citaService) {
-        this.citaService = citaService;
-    }
+public CitaApiController(
+        CitaService citaService,
+        AfiliadoService afiliadoService,
+        CentroMedicoService centroMedicoService,
+        SesionAfiliado sesionAfiliado) {
+
+    this.citaService = citaService;
+    this.afiliadoService = afiliadoService;
+    this.centroMedicoService = centroMedicoService;
+    this.sesionAfiliado = sesionAfiliado;
+}
 
     @Operation(summary = "Obtener citas de un afiliado", description = "Devuelve todas las citas asociadas al ID de un afiliado.")
     @GetMapping("/afiliado/{id}")
@@ -29,19 +43,36 @@ public class CitaApiController {
 
     @Operation(summary = "Agendar nueva cita", description = "Recibe los datos de la cita desde la app móvil y valida la disponibilidad de horario.")
     @PostMapping
-    public ResponseEntity<?> agendarCita(@RequestBody Cita cita) {
-        try {
-            Cita nuevaCita = citaService.agendar(
-                    cita.getAfiliado(),
-                    cita.getCentroMedico(),
-                    cita.getEspecialidad(),
-                    cita.getFechaHora()
-            );
-            return ResponseEntity.ok(nuevaCita);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+public ResponseEntity<?> agendarCita(@RequestBody Cita cita) {
+    if (cita.getCentroMedico() == null
+            || cita.getCentroMedico().getId() == null
+            || cita.getEspecialidad() == null
+            || cita.getEspecialidad().isBlank()
+            || cita.getFechaHora() == null) {
+
+        return ResponseEntity.badRequest().body(
+                "Centro médico, especialidad y fecha son obligatorios");
     }
+
+    try {
+        var afiliado = afiliadoService.buscarPorId(
+                sesionAfiliado.getAfiliadoId());
+
+        var centro = centroMedicoService.buscarPorId(
+                cita.getCentroMedico().getId());
+
+        var nuevaCita = citaService.agendar(
+                afiliado,
+                centro,
+                cita.getEspecialidad(),
+                cita.getFechaHora());
+
+        return ResponseEntity.ok(nuevaCita);
+
+    } catch (IllegalArgumentException | IllegalStateException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
 
     @Operation(summary = "Cancelar una cita", description = "Cambia el estado de una cita a CANCELADA por su ID.")
     @PutMapping("/{id}/cancelar")
