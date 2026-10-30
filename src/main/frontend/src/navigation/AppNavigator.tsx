@@ -1,41 +1,35 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { PatientTabs } from './PatientTabs';
-import { ClinicTabs } from './ClinicTabs';
-import { LoginScreen } from '../screens/LoginScreen';
+import { DoctorTabs } from './DoctorTabs';
+import { AdminTabs } from './AdminTabs';
+import { AuthScreen } from '../screens/auth/AuthScreen';
 import { useAppContext } from '../context/AppContext';
+import { COLORS } from '../theme/theme';
 
 export const AppNavigator = () => {
-    const { mode, user, cargandoSesion } = useAppContext();
+  const { user, isLoadingAuth } = useAppContext();
 
-    // Mientras lee el disco del teléfono, mostramos una pantalla de carga neutra
-    if (cargandoSesion) {
-        return (
-            <View style={styles.center}>
-                <ActivityIndicator size="large" color="#0056b3" />
-            </View>
-        );
-    }
-
+  // Esperar a que se lea la sesión guardada del almacenamiento local
+  if (isLoadingAuth) {
     return (
-        <NavigationContainer>
-            {!user ? (
-                <LoginScreen />
-            ) : mode === 'patient' ? (
-                <PatientTabs />
-            ) : (
-                <ClinicTabs />
-            )}
-        </NavigationContainer>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
     );
-};
+  }
 
-const styles = StyleSheet.create({
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-});
+  // Si no hay sesión iniciada, mostrar la pantalla de Login / Registro
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  return (
+    <NavigationContainer>
+      {user.role === 'admin' && <AdminTabs />}
+      {user.role === 'doctor' && <DoctorTabs />}
+      {user.role === 'patient' && <PatientTabs />}
+    </NavigationContainer>
+  );
+};

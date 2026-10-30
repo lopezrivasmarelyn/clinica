@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { CalendarDays, ClipboardList, Building2 } from 'lucide-react-native';
 import  ClinicScheduleScreen  from '../screens/clinic/ClinicScheduleScreen';
 import  ClinicAppointmentsScreen  from '../screens/clinic/ClinicAppointmentsScreen';
-import  ClinicProfileScreen  from '../screens/clinic/ClinicProfileScreen';
+import { ClinicProfileScreen } from '../screens/clinic/ClinicProfileScreen';
 import { COLORS } from '../theme/theme';
 
 const Tab = createBottomTabNavigator();

@@ -1,9 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, User } from 'lucide-react-native';
-import  PatientHomeScreen  from '../screens/patient/HomeScreen';
-import  AppointmentsScreen  from '../screens/patient/AppointmentsScreen';
-import  ProfileScreen  from '../screens/patient/ProfileScreen';
+import { PatientHomeScreen } from '../screens/patient/HomeScreen';
+import { AppointmentsScreen } from '../screens/patient/AppointmentsScreen';
+import { ProfileScreen } from '../screens/patient/ProfileScreen';
 import { COLORS } from '../theme/theme';
 import { useAppContext } from '../context/AppContext';
 

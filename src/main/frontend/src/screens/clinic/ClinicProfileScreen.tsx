@@ -1,52 +1,58 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Building2, MapPin, Settings } from 'lucide-react-native';
+import { COLORS, SPACING } from '../../theme/theme';
 import { useAppContext } from '../../context/AppContext';
 
-export default function ClinicProfileScreen() {
-  const { user, logout, setMode } = useAppContext();
-
-  const handleLogout = () => {
-    Alert.alert('Cerrar Sesión', '¿Deseas salir de la cuenta de clínica?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Salir', style: 'destructive', onPress: () => logout() }
-    ]);
-  };
+export const ClinicProfileScreen = () => {
+  const { logout } = useAppContext();
 
   return (
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Perfil de Administración</Text>
-
-        {user && (
-            <View style={styles.infoCard}>
-              <Text style={styles.label}>Administrador:</Text>
-              <Text style={styles.value}>{user.nombre}</Text>
-
-              <Text style={styles.label}>Correo de Contacto:</Text>
-              <Text style={styles.value}>{user.email}</Text>
-            </View>
-        )}
-
-        <View style={styles.switchContainer}>
-          <Button
-              title="Volver a Modo Paciente"
-              color="#0056b3"
-              onPress={() => setMode('patient')}
-          />
+        <Text style={styles.title}>Clínica Actual</Text>
+        
+        <View style={styles.card}>
+          <View style={styles.iconContainer}>
+            <Building2 size={40} color={COLORS.primary} />
+          </View>
+          <Text style={styles.clinicName}>CliniCore Medical Center</Text>
+          <View style={styles.locationRow}>
+            <MapPin size={16} color={COLORS.textSecondary} />
+            <Text style={styles.locationText}>Av. Reforma 123, Ciudad de México</Text>
+          </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <Button title="Cerrar Sesión" color="#d9534f" onPress={handleLogout} />
-        </View>
+        <View style={{ flex: 1 }} />
+
+        <TouchableOpacity style={styles.fullWidthButton}>
+          <Text style={styles.fullWidthButtonText}>Cambiar / Afiliar Otra Clínica</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.switchButton}
+          onPress={logout}
+        >
+          <Settings size={20} color={COLORS.textSecondary} />
+          <Text style={styles.switchButtonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
       </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' },
-  infoCard: { backgroundColor: '#fff', padding: 20, borderRadius: 8, marginBottom: 20, elevation: 2 },
-  label: { fontSize: 12, color: '#888', marginTop: 10, textTransform: 'uppercase' },
-  value: { fontSize: 16, fontWeight: 'bold', color: '#333', marginTop: 2 },
-  switchContainer: { marginBottom: 20 },
-  buttonContainer: { marginTop: 10 }
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, padding: SPACING.lg },
+  title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.xl },
+  card: { backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.xl, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  iconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(13,110,253,0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.lg },
+  clinicName: { fontSize: 22, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.sm, textAlign: 'center' },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  locationText: { fontSize: 14, color: COLORS.textSecondary },
+  fullWidthButton: { width: '100%', backgroundColor: COLORS.primary, paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: SPACING.md },
+  fullWidthButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  switchButton: { width: '100%', backgroundColor: COLORS.card, paddingVertical: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, flexDirection: 'row', justifyContent: 'center', gap: 10 },
+  switchButtonText: { color: COLORS.text, fontWeight: '500', fontSize: 16 },
 });

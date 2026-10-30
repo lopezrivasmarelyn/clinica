@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
-import { ApiService } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 
 export function LoginScreen() {
@@ -8,7 +7,7 @@ export function LoginScreen() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { setUser } = useAppContext();
+    const { login } = useAppContext();
 
     const handleLogin = async () => {
         if (!numeroPoliza || !password) {
@@ -18,8 +17,10 @@ export function LoginScreen() {
 
         setLoading(true);
         try {
-            const afiliado = await ApiService.login(numeroPoliza, password);
-            await setUser(afiliado); // Guarda el usuario en Context + AsyncStorage
+            const result = await login(numeroPoliza, password);
+            if (!result.success) {
+                Alert.alert('Error de Autenticación', result.error || 'Póliza o contraseña incorrectas, o servidor no disponible.');
+            }
         } catch (error: any) {
             Alert.alert('Error de Autenticación', 'Póliza o contraseña incorrectas, o servidor no disponible.');
         } finally {
