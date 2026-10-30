@@ -1,4 +1,5 @@
 package sv.edu.esfe.segurodigital.domain.entity;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 
@@ -16,6 +17,7 @@ public class Afiliado {
     @Column(nullable = false, unique = true, length = 120)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false, length = 120)
     private String password;
 
