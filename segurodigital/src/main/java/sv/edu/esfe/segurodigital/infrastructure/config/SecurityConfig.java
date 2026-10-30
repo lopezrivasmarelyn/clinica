@@ -23,6 +23,12 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import sv.edu.esfe.segurodigital.domain.repository.AfiliadoRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -69,21 +75,74 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+public UserDetailsService userDetailsService(
+        AfiliadoRepository repository) {
 
-        http
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            HttpMethod.POST, "/api/auth/login").permitAll()
-                    .requestMatchers("/error").permitAll()
-                    .anyRequest().authenticated())
-            .oauth2ResourceServer(oauth -> oauth
-                    .jwt(Customizer.withDefaults()));
+    return numeroPoliza -> {
+        var afiliado = repository
+                .findByNumeroPoliza(numeroPoliza.trim())
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "Credenciales inválidas"));
 
-        return http.build();
-    }
+        // La identidad autenticada será el ID del afiliado.
+        return User.withUsername(afiliado.getId().toString())
+                .password(afiliado.getPassword())
+                .roles("AFILIADO")
+                .build();
+    };
+}
+
+@Bean
+@Order(1)
+public SecurityFilterChain apiSecurity(
+        HttpSecurity http) throws Exception {
+
+    http
+        .securityMatcher("/api/**")
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session
+                .sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/auth/login").permitAll()
+                .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth -> oauth
+                .jwt(Customizer.withDefaults()));
+
+    return http.build();
+}
+
+@Bean
+@Order(2)
+public SecurityFilterChain webSecurity(
+        HttpSecurity http) throws Exception {
+
+    http
+        .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                        "/", "/login", "/error",
+                        "/css/**", "/js/**", "/images/**",
+                        "/favicon.ico").permitAll()
+                .anyRequest().authenticated())
+        .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .usernameParameter("numeroPoliza")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login?error")
+                .permitAll())
+        .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID"));
+
+    return http.build();
+}
+    
 }
